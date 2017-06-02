@@ -4,7 +4,7 @@ Self balancing arduino robot working with Arduino uno, motor controller shield, 
 Go read our blog about the process here: 
 https://dam9it.wordpress.com/2017/06/01/balancebot-with-arduino/
 
-and check the Thingiverse project here:
+Download the 3D-models of the body parts from our Thingiverse project:
 https://www.thingiverse.com/thing:2359025
 
 Libraries needed for working code:
