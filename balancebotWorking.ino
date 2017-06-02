@@ -1,5 +1,7 @@
-#include <motorshield.h>
-
+                             //************************************************************************************************************
+#include <motorshield.h>    //Most of the code is by Kristian Lauszus. We just added parts needed to control the motors for the balancebot  
+                          
+                           
 /* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
@@ -21,7 +23,7 @@
 #include "Kalman.h" // Source: https://github.com/TKJElectronics/KalmanFilter
 
 #define RESTRICT_PITCH // Comment out to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
-motorshield MotorShield;
+
 Kalman kalmanX; // Create the Kalman instances
 Kalman kalmanY;
 
@@ -36,16 +38,22 @@ double kalAngleX, kalAngleY; // Calculated angle using a Kalman filter
 
 uint32_t timer;
 uint8_t i2cData[14]; // Buffer for I2C data
-uint8_t pwmValue1, pwmValue2;  //moottori lähdöt
+    
+                                   
+motorshield MotorShield;          //***************************************************************************                                                                          
+float wanted = -1.548;           //what position you want the robot to try to get to (sensor value(kalAngleY))  
+float value = 0;                //Keep zero.                                                                     
+uint8_t pwmValue1, pwmValue2;  //Motor variables                                                                  
+                             
+                              
 
-float haluttu = -1.548;
-float arvo = 0;
-String suunta = "";
 // TODO: Make calibration routine
 
 void setup() {
   Serial.begin(115200);
-  MotorShield.initialize();
+                              
+  MotorShield.initialize();  //Start motorshield 
+                            
   Wire.begin();
   TWBR = ((F_CPU / 400000L) - 16) / 2; // Set I2C frequency to 400kHz
 
@@ -186,7 +194,9 @@ void loop() {
   Serial.print(compAngleY); Serial.print("\t");
   Serial.print(kalAngleY); Serial.print("\t");
 */
-  moottorit(kalAngleY);
+                             //*****************************************************************
+  motorControl(kalAngleY);  //Take the kalAngleY to the motor controlling part
+
 #if 0 // Set to 1 to print the temperature
   Serial.print("\t");
 
@@ -198,49 +208,42 @@ void loop() {
   delay(1);
 }
 
-void moottorit(float asento){ 
-  arvo = 0;
-  if(asento > haluttu){
-  MotorShield.setMotorDir(1, 0);
-  MotorShield.setMotorDir(2, 0);
-  suunta = "eteen";
-  arvo = arvo + 1;
- }
-   if(asento < haluttu){
+          //******************************************************************
+         //Below is the code used to controle the motor speeds and directions
+  
+
+void motorControl(float currentAng){
+  value = 0;
+    if(currentAng > wanted){
+      MotorShield.setMotorDir(1, 0);
+      MotorShield.setMotorDir(2, 0);
+      value = value + 1;
+    }
+    if(currentAng < wanted){
       MotorShield.setMotorDir(1, 1);
       MotorShield.setMotorDir(2, 1);
-      suunta = "taakse";
     }
-if(asento > haluttu){
-  asento = asento + 1;
-asento = asento * 1.50688905;
-}
-  if(asento < 0){
-    asento = asento * -1;
+    if(currentAng > wanted){
+      currentAng = currentAng + 1;
+      currentAng = currentAng * 1.50688905;
+    }
+    if(currentAng < 0){
+      currentAng = currentAng * -1;
     }
 
-  
- arvo = arvo + asento * 12;
-if(arvo > 99){
-arvo = 99;
-}
-
-
-if(asento + haluttu > 1){
-if(arvo < 65){
-  arvo = 65;
-}
-    MotorShield.setMotorSpeed(1, arvo);
-    MotorShield.setMotorSpeed(2, arvo); //kakkos moottori falskaa
-    Serial.print(arvo, DEC);
-Serial.print("\t");
-Serial.print(suunta);
-Serial.print("\t");
-Serial.println(asento, DEC);
-  
-}else{
-    arvo = 0;
-    MotorShield.setMotorSpeed(1, arvo);
-    MotorShield.setMotorSpeed(2, arvo);
-}
-}
+    value = value + value * 12;
+    if(value > 99){
+      value = 99;
+    }
+    if(currentAng + wanted > 1){
+      if(value < 65){
+      value = 65;
+      }
+      MotorShield.setMotorSpeed(1, value);
+      MotorShield.setMotorSpeed(2, value);
+    }else{
+      value = 0;
+      MotorShield.setMotorSpeed(1, value);
+      MotorShield.setMotorSpeed(2, value);
+    }
+  }
